@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="채움">
+<meta name="theme-color" content="#0f1210">
+<title>채움</title>
+<style>
+:root{
+  --bg:#0f1210;--panel:#171b18;--panel2:#1e241f;--line:#2a322b;
+  --ink:#eef2ee;--ink-dim:#8b968c;--ink-mute:#5e685f;
+  --green:#5bd07a;--green-deep:#2f7a48;--amber:#e0b04a;--red:#e06a5a;--accent:#7de29a;
+  --radius:18px;font-size:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard",sans-serif;}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overscroll-behavior-y:contain;}
+.wrap{max-width:520px;margin:0 auto;padding:14px 16px 120px;}
+
+.hd{display:flex;align-items:baseline;justify-content:space-between;padding:8px 2px 12px;}
+.hd h1{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;}
+.hd h1 .sub{font-size:.72rem;font-weight:600;color:var(--ink-mute);margin-left:8px;}
+.gear{background:none;border:none;color:var(--ink-mute);font-size:1.05rem;padding:6px;}
+
+/* view toggle */
+.vtabs{display:flex;gap:6px;margin-bottom:14px;}
+.vtab{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px;font-size:.82rem;font-weight:800;color:var(--ink-dim);}
+.vtab.on{background:var(--panel2);color:var(--ink);border-color:var(--green-deep);}
+
+.datenav{display:flex;align-items:center;gap:2px;margin-bottom:12px;}
+.datenav button{background:none;border:none;color:var(--ink-dim);font-size:1.1rem;padding:6px 10px;border-radius:10px;}
+.datenav button:active{background:var(--panel2);}
+.datenav .d{font-size:.82rem;font-weight:700;color:var(--ink);min-width:110px;text-align:center;}
+
+.dash{display:flex;gap:12px;margin-bottom:14px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 14px;flex:1;}
+.card .lbl{font-size:.74rem;font-weight:700;color:var(--ink-dim);}
+.gauge{display:flex;align-items:center;gap:12px;margin-top:10px;}
+.ring{width:70px;height:70px;flex:none;position:relative;}
+.ring svg{transform:rotate(-90deg);}
+.ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+.ring .val b{font-size:.98rem;font-weight:800;}
+.gmeta .big{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;line-height:1;}
+.gmeta .unit{font-size:.8rem;color:var(--ink-dim);font-weight:600;}
+.gmeta .range{font-size:.7rem;color:var(--ink-mute);margin-top:6px;font-weight:600;}
+.status{display:inline-block;margin-top:8px;font-size:.68rem;font-weight:800;padding:3px 9px;border-radius:20px;}
+.st-low{background:rgba(224,106,90,.14);color:var(--red);}
+.st-ok{background:rgba(91,208,122,.14);color:var(--green);}
+.st-over{background:rgba(224,176,74,.14);color:var(--amber);}
+
+/* meals */
+.meal{margin-bottom:12px;}
+.meal-h{display:flex;align-items:center;justify-content:space-between;padding:0 4px 8px;}
+.meal-h .mt{display:flex;align-items:center;gap:8px;}
+.meal-h .mt b{font-size:.95rem;font-weight:800;}
+.meal-h .mt .ico{font-size:1rem;}
+.meal-h .msum{font-size:.72rem;color:var(--ink-mute);font-weight:700;}
+.meal-body{display:flex;flex-direction:column;gap:6px;}
+.item{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:11px 13px;display:flex;align-items:center;gap:10px;}
+.item .nm{flex:1;min-width:0;}
+.item .nm b{font-size:.9rem;font-weight:700;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item .kc{text-align:right;flex:none;}
+.item .kc b{font-size:.9rem;font-weight:800;}
+.item .kc small{display:block;font-size:.66rem;color:var(--accent);font-weight:700;}
+.item .del{background:none;border:none;color:var(--ink-mute);font-size:1.1rem;padding:4px 2px 4px 6px;}
+.item .del:active{color:var(--red);}
+.addmeal{background:var(--panel);border:1px dashed var(--line);border-radius:13px;padding:11px;text-align:center;color:var(--ink-mute);font-size:.82rem;font-weight:700;width:100%;}
+.addmeal:active{border-color:var(--green-deep);color:var(--ink-dim);}
+
+/* weekly grid */
+.gridcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 14px;margin-bottom:14px;}
+.gridcard h3{font-size:.9rem;font-weight:800;margin-bottom:2px;}
+.gridcard .cap{font-size:.7rem;color:var(--ink-mute);font-weight:600;margin-bottom:14px;line-height:1.5;}
+.grid{width:100%;border-collapse:collapse;}
+.grid th,.grid td{text-align:center;padding:0;}
+.grid thead th{font-size:.66rem;color:var(--ink-mute);font-weight:700;padding-bottom:8px;}
+.grid thead th.today{color:var(--accent);}
+.grid .rowlbl{font-size:.68rem;color:var(--ink-dim);font-weight:700;text-align:left;padding-right:6px;white-space:nowrap;}
+.cell{width:26px;height:26px;}
+.dotcell{width:20px;height:20px;border-radius:6px;margin:2px auto;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800;}
+.dotcell.f{background:var(--green-deep);color:#dff5e6;}
+.dotcell.f2{background:var(--green);color:#08120b;}
+.grid tbody tr{border-bottom:1px solid rgba(42,50,43,.5);}
+.grid tbody tr:last-child{border-bottom:none;}
+.grid td.rowlbl,.grid th.rowlbl{padding:9px 6px 9px 2px;}
+
+/* averages */
+.avgcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px 14px;margin-bottom:14px;}
+.avgcard h3{font-size:.9rem;font-weight:800;margin-bottom:2px;}
+.avgcard .cap{font-size:.7rem;color:var(--ink-mute);font-weight:600;margin-bottom:14px;line-height:1.5;}
+.avgrow{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.avgrow .al{width:52px;font-size:.76rem;font-weight:800;color:var(--ink-dim);flex:none;display:flex;align-items:center;gap:5px;}
+.avgbar{flex:1;height:22px;background:var(--panel2);border-radius:7px;overflow:hidden;position:relative;}
+.avgbar .af{height:100%;background:linear-gradient(90deg,var(--green-deep),var(--green));border-radius:7px;}
+.avgrow .av{font-size:.72rem;font-weight:800;color:var(--ink);flex:none;width:96px;text-align:right;}
+.wsum{background:var(--panel2);border-radius:12px;padding:12px 14px;font-size:.74rem;color:var(--ink-dim);font-weight:600;line-height:1.6;}
+.wsum b{color:var(--green);}
+
+/* FAB */
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;
+  background:var(--accent);color:#08120b;border:none;font-size:.98rem;font-weight:800;padding:15px 30px;border-radius:30px;box-shadow:0 8px 28px rgba(125,226,154,.32);}
+.fab:active{transform:translateX(-50%) scale(.96);}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:50;opacity:0;pointer-events:none;transition:opacity .22s;backdrop-filter:blur(2px);}
+.scrim.on{opacity:1;pointer-events:auto;}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--panel);border-radius:24px 24px 0 0;border-top:1px solid var(--line);
+  padding:8px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(100%);transition:transform .28s cubic-bezier(.3,.8,.3,1);max-height:90vh;overflow-y:auto;}
+.sheet.on{transform:translateY(0);}
+.grip{width:40px;height:4px;background:var(--line);border-radius:4px;margin:8px auto 14px;}
+.sheet h3{font-size:1.05rem;font-weight:800;margin-bottom:4px;}
+.sheet .hint{font-size:.74rem;color:var(--ink-mute);margin-bottom:14px;font-weight:600;line-height:1.5;}
+
+.mealpick{display:flex;gap:6px;margin-bottom:14px;}
+.mealpick button{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px 4px;font-size:.8rem;font-weight:800;color:var(--ink-dim);display:flex;flex-direction:column;align-items:center;gap:3px;}
+.mealpick button .mi{font-size:1.1rem;}
+.mealpick button.on{background:var(--accent);color:#08120b;border-color:var(--accent);}
+
+.search{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:13px 15px;color:var(--ink);font-size:.95rem;font-weight:600;margin-bottom:12px;}
+.search:focus{outline:none;border-color:var(--green-deep);}
+.tabs{display:flex;gap:6px;margin-bottom:12px;}
+.tab{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px;font-size:.8rem;font-weight:800;color:var(--ink-dim);}
+.tab.on{background:var(--accent);color:#08120b;border-color:var(--accent);}
+.results{display:flex;flex-direction:column;gap:6px;max-height:42vh;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.grp-lbl{font-size:.66rem;font-weight:800;color:var(--ink-mute);padding:6px 4px 2px;letter-spacing:.03em;}
+.ritem{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;}
+.ritem:active{border-color:var(--green-deep);}
+.ritem .ri-nm{flex:1;min-width:0;}
+.ritem .ri-nm b{font-size:.86rem;font-weight:700;display:block;}
+.ritem .ri-nm small{font-size:.68rem;color:var(--ink-mute);font-weight:600;}
+.ritem .ri-kc{text-align:right;font-size:.76rem;font-weight:700;color:var(--ink-dim);}
+.ritem .ri-kc em{color:var(--accent);font-style:normal;display:block;font-size:.66rem;}
+.ritem .pin{background:none;border:none;font-size:1rem;padding:2px 4px;color:var(--ink-mute);}
+.ritem .pin.on{color:var(--amber);}
+
+.form{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+.form label{font-size:.74rem;font-weight:700;color:var(--ink-dim);margin-bottom:-4px;}
+.form input{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:13px 15px;color:var(--ink);font-size:.95rem;font-weight:600;}
+.form input:focus{outline:none;border-color:var(--green-deep);}
+.row2{display:flex;gap:10px;}
+.row2>div{flex:1;display:flex;flex-direction:column;gap:6px;}
+.btn{background:var(--accent);color:#08120b;border:none;border-radius:14px;padding:15px;font-size:.95rem;font-weight:800;margin-top:6px;}
+.btn:active{opacity:.85;}
+.qty{display:flex;align-items:center;gap:10px;margin:6px 0 2px;}
+.qty label{font-size:.74rem;font-weight:700;color:var(--ink-dim);}
+.qtybtns{display:flex;gap:6px;margin-left:auto;}
+.qtybtns button{background:var(--panel2);border:1px solid var(--line);color:var(--ink);width:34px;height:34px;border-radius:9px;font-size:1.1rem;font-weight:700;}
+.qty b{font-size:1rem;font-weight:800;min-width:40px;text-align:center;}
+.note{font-size:.7rem;color:var(--ink-mute);line-height:1.6;font-weight:600;background:var(--panel2);border-radius:12px;padding:12px 14px;margin-top:4px;}
+.setrow{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.setrow label{font-size:.76rem;font-weight:700;color:var(--ink-dim);}
+.setrow .two{display:flex;gap:10px;}
+.setrow .two input{flex:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hd">
+    <h1>채움<span class="sub">칼로리 · 단백질</span></h1>
+    <button class="gear" onclick="openSet()">⚙︎</button>
+  </div>
+
+  <div class="vtabs">
+    <button class="vtab on" id="vDay" onclick="setView('day')">하루</button>
+    <button class="vtab" id="vWeek" onclick="setView('week')">주간 비교</button>
+  </div>
+
+  <!-- DAY VIEW -->
+  <div id="dayView">
+    <div class="datenav">
+      <button onclick="shiftDay(-1)">‹</button>
+      <div class="d" id="dateLbl">오늘</div>
+      <button onclick="shiftDay(1)" id="nextBtn">›</button>
+    </div>
+
+    <div class="dash">
+      <div class="card">
+        <div class="lbl">칼로리</div>
+        <div class="gauge">
+          <div class="ring"><svg width="70" height="70" viewBox="0 0 70 70">
+            <circle cx="35" cy="35" r="29" fill="none" stroke="#2a322b" stroke-width="7"/>
+            <circle id="kcalArc" cx="35" cy="35" r="29" fill="none" stroke="var(--green)" stroke-width="7" stroke-linecap="round" stroke-dasharray="182" stroke-dashoffset="182"/>
+          </svg><div class="val"><b id="kcalPct">0%</b></div></div>
+          <div class="gmeta">
+            <div><span class="big" id="kcalNow">0</span> <span class="unit">kcal</span></div>
+            <div class="range" id="kcalRange">1700–2200</div>
+            <div class="status st-low" id="kcalStat">더 채우기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="dash">
+      <div class="card">
+        <div class="lbl">단백질</div>
+        <div class="gauge">
+          <div class="ring"><svg width="70" height="70" viewBox="0 0 70 70">
+            <circle cx="35" cy="35" r="29" fill="none" stroke="#2a322b" stroke-width="7"/>
+            <circle id="protArc" cx="35" cy="35" r="29" fill="none" stroke="var(--accent)" stroke-width="7" stroke-linecap="round" stroke-dasharray="182" stroke-dashoffset="182"/>
+          </svg><div class="val"><b id="protPct">0%</b></div></div>
+          <div class="gmeta">
+            <div><span class="big" id="protNow">0</span> <span class="unit">g</span></div>
+            <div class="range" id="protRange">100–150 g</div>
+            <div class="status st-low" id="protStat">더 채우기</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="meals"></div>
+  </div>
+
+  <!-- WEEK VIEW -->
+  <div id="weekView" style="display:none">
+    <div class="datenav">
+      <button onclick="shiftWeek(-1)">‹</button>
+      <div class="d" id="weekLbl">이번 주</div>
+      <button onclick="shiftWeek(1)" id="nextWeekBtn">›</button>
+    </div>
+
+    <div class="gridcard">
+      <h3>요일 × 끼니</h3>
+      <div class="cap">채운 끼니는 초록, 빈칸은 거른 끼니야. 몰아먹기·거르기 패턴이 한눈에 보여.</div>
+      <table class="grid" id="grid"></table>
+    </div>
+
+    <div class="avgcard">
+      <h3>끼니별 주간 평균</h3>
+      <div class="cap">이번 주, 끼니마다 평균 얼마나 먹었나. 어디서 칼로리가 쏠리는지 보여.</div>
+      <div id="avgKcal"></div>
+      <div class="wsum" id="weekSum">—</div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="openAdd()">+ 음식 추가</button>
+
+<!-- Add sheet -->
+<div class="scrim" id="scrim" onclick="closeSheets()"></div>
+<div class="sheet" id="addSheet">
+  <div class="grip"></div>
+  <h3>음식 추가</h3>
+  <div class="hint">한 번 먹은 음식은 별표 안 눌러도 "최근"에 자동 저장돼. 다음엔 위에서 탭 한 번.</div>
+  <div class="mealpick" id="mealPick">
+    <button data-m="아침" onclick="pickMeal('아침')"><span class="mi">🌅</span>아침</button>
+    <button data-m="점심" onclick="pickMeal('점심')"><span class="mi">☀️</span>점심</button>
+    <button data-m="저녁" onclick="pickMeal('저녁')"><span class="mi">🌙</span>저녁</button>
+    <button data-m="간식" onclick="pickMeal('간식')"><span class="mi">🍎</span>간식</button>
+  </div>
+  <div class="tabs">
+    <button class="tab on" id="tabSearch" onclick="setTab('search')">검색 · 최근</button>
+    <button class="tab" id="tabManual" onclick="setTab('manual')">직접 입력</button>
+  </div>
+  <div id="paneSearch">
+    <input class="search" id="searchInput" placeholder="음식 검색 (예: 비빔밥, 닭가슴살)" oninput="renderResults()" autocomplete="off">
+    <div class="results" id="results"></div>
+  </div>
+  <div id="paneManual" style="display:none">
+    <div class="form">
+      <label>음식 이름</label>
+      <input id="mName" placeholder="예: 커클랜드 단백질바" autocomplete="off">
+      <div class="row2">
+        <div><label>칼로리 (kcal)</label><input id="mKcal" type="number" inputmode="numeric" placeholder="0"></div>
+        <div><label>단백질 (g)</label><input id="mProt" type="number" inputmode="numeric" placeholder="0"></div>
+      </div>
+      <button class="btn" onclick="addManual()">추가하기</button>
+      <div class="note">직접 입력한 음식은 "최근"에 자동 저장돼. 브랜드 제품은 한 번만 넣으면 끝.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Qty sheet -->
+<div class="sheet" id="qtySheet">
+  <div class="grip"></div>
+  <h3 id="qtyName">음식</h3>
+  <div class="hint" id="qtyBase">1인분</div>
+  <div class="qty"><label>수량</label><div class="qtybtns"><button onclick="qtyStep(-1)">−</button><b id="qtyVal">1</b><button onclick="qtyStep(1)">+</button></div></div>
+  <div class="note" id="qtyPreview">—</div>
+  <button class="btn" onclick="confirmQty()">추가하기</button>
+</div>
+
+<!-- Settings -->
+<div class="sheet" id="setSheet">
+  <div class="grip"></div>
+  <h3>목표 설정</h3>
+  <div class="hint">최소~최대 사이면 초록불. "덜 먹었나"가 아니라 "충분히 채웠나"를 봐.</div>
+  <div class="setrow"><label>칼로리 목표 (kcal)</label><div class="two"><input id="setKcalMin" type="number" inputmode="numeric"><input id="setKcalMax" type="number" inputmode="numeric"></div></div>
+  <div class="setrow"><label>단백질 목표 (g)</label><div class="two"><input id="setProtMin" type="number" inputmode="numeric"><input id="setProtMax" type="number" inputmode="numeric"></div></div>
+  <button class="btn" onclick="saveSet()">저장</button>
+  <div class="note">183cm · 목표 75kg · 천천히 감량 기준 추천: 칼로리 1700–2200, 단백질 100–150g.</div>
+</div>
+
+<script>
+const LS_KEY='chaeum_v2';
+function load(){try{const r=localStorage.getItem(LS_KEY);if(r)return JSON.parse(r);}catch(e){}return null;}
+function save(){localStorage.setItem(LS_KEY,JSON.stringify(state));}
+
+const MEALS=['아침','점심','저녁','간식'];
+const MEAL_ICO={'아침':'🌅','점심':'☀️','저녁':'🌙','간식':'🍎'};
+
+const defaults={
+  goals:{kcalMin:1700,kcalMax:2200,protMin:100,protMax:150},
+  days:{},          // 'YYYY-MM-DD': { 아침:[{name,kcal,prot}], 점심:[], 저녁:[], 간식:[] }
+  recent:[],        // {name,base,kcal,prot,pinned} — auto-accumulated, newest first
+};
+let state=load()||JSON.parse(JSON.stringify(defaults));
+state.goals=Object.assign({},defaults.goals,state.goals||{});
+state.days=state.days||{};
+state.recent=state.recent||[];
+
+/* preload favorites once (first run) */
+if(!state._seeded){
+  const seed=[
+    {name:"시리얼+무가당두유",base:"한 그릇",kcal:250,prot:9,pinned:true},
+    {name:"커클랜드 단백질바",base:"1개",kcal:190,prot:21,pinned:true},
+    {name:"랩노쉬 프로틴 드링크 (초코)",base:"1병",kcal:100,prot:20,pinned:true},
+    {name:"닭가슴살 100g",base:"100g",kcal:110,prot:23,pinned:true},
+    {name:"비빔밥",base:"1그릇",kcal:550,prot:16,pinned:true},
+  ];
+  state.recent=seed.concat(state.recent);
+  state._seeded=true;save();
+}
+
+/* built-in DB */
+const DB=[
+  {n:"공깃밥 (흰밥)",b:"1공기",k:310,p:6},{n:"현미밥",b:"1공기",k:320,p:7},
+  {n:"김밥",b:"1줄",k:480,p:12},{n:"라면",b:"1봉지",k:500,p:10},
+  {n:"칼국수",b:"1그릇",k:520,p:16},{n:"비빔밥",b:"1그릇",k:550,p:16},
+  {n:"김치볶음밥",b:"1그릇",k:560,p:14},{n:"된장찌개",b:"1인분",k:180,p:11},
+  {n:"김치찌개",b:"1인분",k:250,p:15},{n:"부대찌개",b:"1인분",k:450,p:22},
+  {n:"미역국",b:"1그릇",k:90,p:6},{n:"떡볶이",b:"1인분",k:480,p:9},
+  {n:"만두",b:"5개",k:320,p:12},
+  {n:"닭가슴살 100g",b:"100g",k:110,p:23},{n:"삶은 계란",b:"1개",k:78,p:6},
+  {n:"계란후라이",b:"1개",k:100,p:6},{n:"두부",b:"1/2모",k:120,p:12},
+  {n:"참치캔 (물)",b:"1캔",k:110,p:26},{n:"참치캔 (기름)",b:"1캔",k:200,p:25},
+  {n:"연어구이",b:"100g",k:200,p:22},{n:"고등어구이",b:"1토막",k:230,p:21},
+  {n:"삼겹살",b:"100g",k:330,p:17},{n:"목살",b:"100g",k:220,p:20},
+  {n:"소고기 등심",b:"100g",k:250,p:22},{n:"제육볶음",b:"1인분",k:420,p:24},
+  {n:"닭볶음탕",b:"1인분",k:400,p:28},{n:"불고기",b:"1인분",k:380,p:26},
+  {n:"그릭요거트",b:"100g",k:60,p:10},{n:"우유",b:"200ml",k:130,p:6},
+  {n:"프로틴 셰이크",b:"1스쿱",k:120,p:24},{n:"시리얼+무가당두유",b:"한 그릇",k:250,p:9},
+  {n:"바나나",b:"1개",k:90,p:1},{n:"사과",b:"1개",k:95,p:0},
+  {n:"고구마",b:"중 1개",k:130,p:2},{n:"아몬드",b:"20알",k:140,p:5},
+  {n:"스타벅스 아메리카노",b:"톨",k:10,p:1,brand:true},
+  {n:"스타벅스 카페라떼",b:"톨",k:180,p:10,brand:true},
+  {n:"바나나우유",b:"240ml",k:170,p:5,brand:true},
+  {n:"제로콜라",b:"355ml",k:0,p:0,brand:true},
+];
+
+/* date */
+function fmt(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function today(){const d=new Date();d.setHours(0,0,0,0);return d;}
+let cursor=today();
+let weekCursor=today();
+let curView='day';
+const DOW=['일','월','화','수','목','금','토'];
+function isToday(d){return fmt(d)===fmt(today());}
+function dateLabel(d){
+  if(isToday(d))return '오늘';
+  const y=today();y.setDate(y.getDate()-1);
+  if(fmt(d)===fmt(y))return '어제';
+  return (d.getMonth()+1)+'월 '+d.getDate()+'일 ('+DOW[d.getDay()]+')';
+}
+
+function setView(v){
+  curView=v;
+  document.getElementById('vDay').classList.toggle('on',v==='day');
+  document.getElementById('vWeek').classList.toggle('on',v==='week');
+  document.getElementById('dayView').style.display=v==='day'?'block':'none';
+  document.getElementById('weekView').style.display=v==='week'?'block':'none';
+  document.getElementById('fab').style.display=v==='day'?'block':'none';
+  render();
+}
+function shiftDay(n){cursor.setDate(cursor.getDate()+n);if(cursor>today())cursor=today();render();}
+function shiftWeek(n){weekCursor.setDate(weekCursor.getDate()+n*7);if(weekCursor>today())weekCursor=today();render();}
+
+/* data access */
+function dayObj(d){const k=fmt(d);if(!state.days[k])state.days[k]={};return state.days[k];}
+function mealItems(d,m){return (state.days[fmt(d)]||{})[m]||[];}
+function daySum(d){
+  let k=0,p=0;const o=state.days[fmt(d)]||{};
+  MEALS.forEach(m=>(o[m]||[]).forEach(e=>{k+=e.kcal;p+=e.prot;}));
+  return{k,p};
+}
+function mealSum(d,m){let k=0,p=0;(mealItems(d,m)).forEach(e=>{k+=e.kcal;p+=e.prot;});return{k,p};}
+
+function statusOf(v,min,max){
+  if(v<min)return{cls:'st-low',txt:'더 채우기'};
+  if(v>max)return{cls:'st-over',txt:'초과'};
+  return{cls:'st-ok',txt:'좋아 ✓'};
+}
+
+/* render */
+const C=182;
+function setArc(id,pct){document.getElementById(id).style.strokeDashoffset=C-C*Math.min(pct,1);}
+
+function render(){
+  if(curView==='day')renderDay();else renderWeek();
+  save();
+}
+
+function renderDay(){
+  const g=state.goals;
+  document.getElementById('dateLbl').textContent=dateLabel(cursor);
+  document.getElementById('nextBtn').style.visibility=isToday(cursor)?'hidden':'visible';
+  const s=daySum(cursor);
+  document.getElementById('kcalNow').textContent=s.k;
+  document.getElementById('kcalRange').textContent=g.kcalMin+'–'+g.kcalMax;
+  setArc('kcalArc',s.k/g.kcalMax);
+  document.getElementById('kcalPct').textContent=Math.round(s.k/g.kcalMax*100)+'%';
+  const ks=statusOf(s.k,g.kcalMin,g.kcalMax);const kEl=document.getElementById('kcalStat');kEl.className='status '+ks.cls;kEl.textContent=ks.txt;
+  document.getElementById('protNow').textContent=s.p;
+  document.getElementById('protRange').textContent=g.protMin+'–'+g.protMax+' g';
+  setArc('protArc',s.p/g.protMax);
+  document.getElementById('protPct').textContent=Math.round(s.p/g.protMax*100)+'%';
+  const ps=statusOf(s.p,g.protMin,g.protMax);const pEl=document.getElementById('protStat');pEl.className='status '+ps.cls;pEl.textContent=ps.txt;
+
+  const box=document.getElementById('meals');box.innerHTML='';
+  MEALS.forEach(m=>{
+    const items=mealItems(cursor,m);const ms=mealSum(cursor,m);
+    const sec=document.createElement('div');sec.className='meal';
+    let inner='<div class="meal-h"><div class="mt"><span class="ico">'+MEAL_ICO[m]+'</span><b>'+m+'</b></div>'+
+      '<span class="msum">'+(items.length?ms.k+' kcal · 단백질 '+ms.p+'g':'—')+'</span></div><div class="meal-body">';
+    items.forEach((e,i)=>{
+      inner+='<div class="item"><div class="nm"><b>'+esc(e.name)+'</b></div>'+
+        '<div class="kc"><b>'+e.kcal+'</b><small>단백질 '+e.prot+'g</small></div>'+
+        '<button class="del" data-m="'+m+'" data-i="'+i+'">✕</button></div>';
+    });
+    inner+='<button class="addmeal" data-m="'+m+'">+ '+m+' 추가</button></div>';
+    sec.innerHTML=inner;box.appendChild(sec);
+  });
+  box.querySelectorAll('.del').forEach(b=>b.onclick=()=>{
+    const m=b.dataset.m,i=+b.dataset.i;const arr=mealItems(cursor,m);arr.splice(i,1);
+    if(!arr.length)delete state.days[fmt(cursor)][m];render();
+  });
+  box.querySelectorAll('.addmeal').forEach(b=>b.onclick=()=>openAdd(b.dataset.m));
+}
+
+function weekDates(anchor){
+  const d=new Date(anchor);const wd=(d.getDay()+6)%7;const mon=new Date(d);mon.setDate(d.getDate()-wd);
+  return Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);x.setHours(0,0,0,0);return x;});
+}
+function renderWeek(){
+  const g=state.goals;const days=weekDates(weekCursor);
+  const first=days[0],last=days[6];
+  const inThisWeek=fmt(weekDates(today())[0])===fmt(first);
+  document.getElementById('weekLbl').textContent=inThisWeek?'이번 주':((first.getMonth()+1)+'.'+first.getDate()+'–'+(last.getMonth()+1)+'.'+last.getDate());
+  document.getElementById('nextWeekBtn').style.visibility=inThisWeek?'hidden':'visible';
+
+  // grid
+  const grid=document.getElementById('grid');
+  let html='<thead><tr><th class="rowlbl"></th>';
+  days.forEach(d=>{html+='<th class="cell'+(isToday(d)?' today':'')+'">'+DOW[d.getDay()]+'</th>';});
+  html+='</tr></thead><tbody>';
+  MEALS.forEach(m=>{
+    html+='<tr><td class="rowlbl">'+MEAL_ICO[m]+' '+m+'</td>';
+    days.forEach(d=>{
+      const ms=mealSum(d,m);const has=mealItems(d,m).length>0;const future=d>today();
+      let cls='dotcell';let txt='';
+      if(has){cls+=ms.k>=250?' f2':' f';txt=Math.round(ms.k);}
+      html+='<td class="cell">'+(future?'<div class="dotcell" style="opacity:.25"></div>':'<div class="'+cls+'">'+txt+'</div>')+'</td>';
+    });
+    html+='</tr>';
+  });
+  html+='</tbody>';grid.innerHTML=html;
+
+  // averages per meal (over logged days only)
+  const avgBox=document.getElementById('avgKcal');avgBox.innerHTML='';
+  let loggedDays=days.filter(d=>d<=today()&&daySum(d).k>0);
+  const nLog=loggedDays.length||1;
+  let maxAvg=1;
+  const avgs=MEALS.map(m=>{
+    let tot=0;loggedDays.forEach(d=>tot+=mealSum(d,m).k);
+    const a=Math.round(tot/nLog);if(a>maxAvg)maxAvg=a;return{m,a,tot};
+  });
+  avgs.forEach(x=>{
+    const pct=Math.round(x.a/maxAvg*100);
+    const row=document.createElement('div');row.className='avgrow';
+    row.innerHTML='<div class="al">'+MEAL_ICO[x.m]+' '+x.m+'</div>'+
+      '<div class="avgbar"><div class="af" style="width:'+pct+'%"></div></div>'+
+      '<div class="av">'+x.a+' kcal/일</div>';
+    avgBox.appendChild(row);
+  });
+
+  // summary
+  let okDays=0,totK=0,totP=0;
+  loggedDays.forEach(d=>{const s=daySum(d);totK+=s.k;totP+=s.p;if(s.k>=g.kcalMin&&s.k<=g.kcalMax)okDays++;});
+  const avgK=loggedDays.length?Math.round(totK/loggedDays.length):0;
+  const avgP=loggedDays.length?Math.round(totP/loggedDays.length):0;
+  const sumEl=document.getElementById('weekSum');
+  if(!loggedDays.length){sumEl.innerHTML='이번 주 기록이 아직 없어. 하루 탭에서 음식을 추가해봐.';}
+  else{
+    let msg='기록한 '+loggedDays.length+'일 중 <b>목표 달성 '+okDays+'일</b>. ';
+    msg+='하루 평균 '+avgK+' kcal · 단백질 '+avgP+'g.';
+    if(avgK<g.kcalMin)msg+=' 칼로리가 조금 부족해 — 밥이나 견과류로 더 채우면 딱이야.';
+    else if(avgP>=g.protMin)msg+=' 단백질은 잘 채우고 있어 👍';
+    sumEl.innerHTML=msg;
+  }
+}
+function esc(s){return s.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));}
+
+/* add flow */
+let curMeal='아침',curTab='search';
+function guessMeal(){const h=new Date().getHours();if(h<11)return '아침';if(h<15)return '점심';if(h<21)return '저녁';return '간식';}
+function openAdd(m){
+  curMeal=m||guessMeal();
+  document.querySelectorAll('#mealPick button').forEach(b=>b.classList.toggle('on',b.dataset.m===curMeal));
+  setTab('search');document.getElementById('searchInput').value='';renderResults();openSheet('addSheet');
+}
+function pickMeal(m){curMeal=m;document.querySelectorAll('#mealPick button').forEach(b=>b.classList.toggle('on',b.dataset.m===m));}
+function setTab(t){
+  curTab=t;
+  document.getElementById('tabSearch').classList.toggle('on',t==='search');
+  document.getElementById('tabManual').classList.toggle('on',t==='manual');
+  document.getElementById('paneSearch').style.display=t==='search'?'block':'none';
+  document.getElementById('paneManual').style.display=t==='manual'?'block':'none';
+}
+function renderResults(){
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  const box=document.getElementById('results');box.innerHTML='';
+  const pinned=state.recent.filter(r=>r.pinned);
+  const recents=state.recent.filter(r=>!r.pinned);
+  const dbList=DB.map(f=>({name:f.n,base:f.b,kcal:f.k,prot:f.p,brand:f.brand}));
+  function match(x){return !q||x.name.toLowerCase().includes(q);}
+  function block(title,arr,showPin){
+    const a=arr.filter(match);if(!a.length)return;
+    const l=document.createElement('div');l.className='grp-lbl';l.textContent=title;box.appendChild(l);
+    a.slice(0,20).forEach(x=>box.appendChild(rowEl(x,showPin)));
+  }
+  const seen=new Set();
+  const pin2=pinned.filter(x=>{if(seen.has(x.name))return false;seen.add(x.name);return true;});
+  const rec2=recents.filter(x=>{if(seen.has(x.name))return false;seen.add(x.name);return true;});
+  const db2=dbList.filter(x=>{if(seen.has(x.name))return false;seen.add(x.name);return true;});
+  block('고정',pin2,true);
+  block('최근',rec2,true);
+  block('음식 목록',db2,false);
+  if(!box.children.length)box.innerHTML='<div class="note" style="margin:8px 0">검색 결과 없어. "직접 입력"으로 추가하면 다음부턴 최근에 떠.</div>';
+}
+function rowEl(x,showPin){
+  const el=document.createElement('div');el.className='ritem';
+  const isPin=state.recent.some(r=>r.name===x.name&&r.pinned);
+  el.innerHTML='<div class="ri-nm"><b>'+esc(x.name)+(x.brand?' <small style="color:var(--amber)">·참고</small>':'')+'</b><small>'+esc(x.base||'1인분')+'</small></div>'+
+    '<div class="ri-kc">'+x.kcal+' kcal<em>단백질 '+x.prot+'g</em></div>'+
+    '<button class="pin '+(isPin?'on':'')+'">'+(isPin?'★':'☆')+'</button>';
+  el.onclick=(ev)=>{if(ev.target.closest('.pin'))return;openQty(x);};
+  el.querySelector('.pin').onclick=(ev)=>{ev.stopPropagation();togglePin(x);renderResults();};
+  return el;
+}
+function togglePin(x){
+  let r=state.recent.find(rr=>rr.name===x.name);
+  if(r){r.pinned=!r.pinned;}
+  else{state.recent.unshift({name:x.name,base:x.base||'1인분',kcal:x.kcal,prot:x.prot,pinned:true});}
+  save();
+}
+
+/* qty */
+let qtyItem=null,qtyN=1;
+function openQty(x){qtyItem=x;qtyN=1;
+  document.getElementById('qtyName').textContent=x.name;
+  document.getElementById('qtyBase').textContent=(x.base||'1인분')+' · '+curMeal;
+  updateQty();openSheet('qtySheet');
+}
+function qtyStep(n){qtyN=Math.max(1,qtyN+n);updateQty();}
+function updateQty(){document.getElementById('qtyVal').textContent=qtyN;
+  document.getElementById('qtyPreview').textContent='총 '+(qtyItem.kcal*qtyN)+' kcal · 단백질 '+(qtyItem.prot*qtyN)+'g';}
+function confirmQty(){
+  addEntry({name:qtyItem.name+(qtyN>1?' ×'+qtyN:''),kcal:qtyItem.kcal*qtyN,prot:qtyItem.prot*qtyN});
+  bumpRecent({name:qtyItem.name,base:qtyItem.base,kcal:qtyItem.kcal,prot:qtyItem.prot});
+  closeSheets();
+}
+function addManual(){
+  const name=document.getElementById('mName').value.trim();
+  const kcal=parseInt(document.getElementById('mKcal').value)||0;
+  const prot=parseInt(document.getElementById('mProt').value)||0;
+  if(!name){document.getElementById('mName').focus();return;}
+  addEntry({name,kcal,prot});
+  bumpRecent({name,base:'1인분',kcal,prot});
+  document.getElementById('mName').value='';document.getElementById('mKcal').value='';document.getElementById('mProt').value='';
+  closeSheets();
+}
+function bumpRecent(x){
+  const i=state.recent.findIndex(r=>r.name===x.name);
+  if(i>=0){const wasPin=state.recent[i].pinned;const it=state.recent.splice(i,1)[0];it.pinned=wasPin;it.kcal=x.kcal;it.prot=x.prot;it.base=x.base||it.base;state.recent.unshift(it);}
+  else{state.recent.unshift({name:x.name,base:x.base||'1인분',kcal:x.kcal,prot:x.prot,pinned:false});}
+  // cap non-pinned recents at 30
+  const pins=state.recent.filter(r=>r.pinned);let recs=state.recent.filter(r=>!r.pinned).slice(0,30);
+  state.recent=[...pins.filter(p=>!recs.some(r=>r.name===p.name)),...recs];
+  // keep order: rebuild simply
+  save();
+}
+function addEntry(e){
+  const o=dayObj(cursor);if(!o[curMeal])o[curMeal]=[];o[curMeal].push(e);render();
+}
+
+/* settings */
+function openSet(){const g=state.goals;
+  setKcalMin.value=g.kcalMin;setKcalMax.value=g.kcalMax;setProtMin.value=g.protMin;setProtMax.value=g.protMax;openSheet('setSheet');}
+function saveSet(){const g=state.goals;
+  g.kcalMin=parseInt(setKcalMin.value)||g.kcalMin;g.kcalMax=parseInt(setKcalMax.value)||g.kcalMax;
+  g.protMin=parseInt(setProtMin.value)||g.protMin;g.protMax=parseInt(setProtMax.value)||g.protMax;
+  save();render();closeSheets();}
+
+function openSheet(id){document.getElementById('scrim').classList.add('on');document.getElementById(id).classList.add('on');}
+function closeSheets(){document.getElementById('scrim').classList.remove('on');['addSheet','qtySheet','setSheet'].forEach(i=>document.getElementById(i).classList.remove('on'));}
+
+setView('day');
+</script>
+</body>
+</html>
