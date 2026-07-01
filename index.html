@@ -52,6 +52,31 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
 .st-low{background:rgba(224,106,90,.14);color:var(--red);}
 .st-ok{background:rgba(91,208,122,.14);color:var(--green);}
 .st-over{background:rgba(224,176,74,.14);color:var(--amber);}
+.status{cursor:pointer;}
+.status.st-ok{cursor:default;}
+/* reco */
+.reco-gap{display:flex;gap:10px;margin-bottom:14px;}
+.reco-gap .gp{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:13px;padding:12px 14px;}
+.reco-gap .gp .gl{font-size:.7rem;color:var(--ink-mute);font-weight:700;}
+.reco-gap .gp .gv{font-size:1.35rem;font-weight:800;margin-top:3px;letter-spacing:-.02em;}
+.reco-gap .gp .gv small{font-size:.72rem;color:var(--ink-dim);font-weight:600;}
+.reco-lead{font-size:.82rem;font-weight:700;color:var(--ink);line-height:1.5;margin-bottom:12px;padding:0 2px;}
+.reco-lead.done{color:var(--green);}
+.reco-list{display:flex;flex-direction:column;gap:8px;}
+.reco-plan{margin-bottom:14px;}
+.reco-plan .pl{font-size:.74rem;font-weight:800;color:var(--ink-dim);padding:2px 2px 8px;display:flex;align-items:center;gap:6px;}
+.reco-item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px;}
+.reco-item .rn{flex:1;min-width:0;}
+.reco-item .rn b{font-size:.86rem;font-weight:700;display:block;}
+.reco-item .rn small{font-size:.68rem;color:var(--ink-mute);font-weight:600;}
+.reco-item .rk{text-align:right;font-size:.74rem;font-weight:700;color:var(--ink-dim);flex:none;}
+.reco-item .rk em{color:var(--accent);font-style:normal;display:block;font-size:.66rem;}
+.reco-item .radd{background:var(--accent);color:#08120b;border:none;border-radius:9px;font-size:.72rem;font-weight:800;padding:7px 11px;flex:none;}
+.reco-item .radd:active{opacity:.8;}
+.reco-sleep{text-align:center;padding:20px 12px;}
+.reco-sleep .em{font-size:2rem;}
+.reco-sleep .msg{font-size:.86rem;font-weight:700;color:var(--ink);margin-top:8px;line-height:1.6;}
+.reco-sleep .sub{font-size:.74rem;color:var(--ink-mute);font-weight:600;margin-top:6px;line-height:1.5;}
 
 /* meals */
 .meal{margin-bottom:12px;}
@@ -189,7 +214,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
           <div class="gmeta">
             <div><span class="big" id="kcalNow">0</span> <span class="unit">kcal</span></div>
             <div class="range" id="kcalRange">1700–2200</div>
-            <div class="status st-low" id="kcalStat">더 채우기</div>
+            <div class="status st-low" id="kcalStat" onclick="openReco()">더 채우기</div>
           </div>
         </div>
       </div>
@@ -205,7 +230,7 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
           <div class="gmeta">
             <div><span class="big" id="protNow">0</span> <span class="unit">g</span></div>
             <div class="range" id="protRange">100–150 g</div>
-            <div class="status st-low" id="protStat">더 채우기</div>
+            <div class="status st-low" id="protStat" onclick="openReco()">더 채우기</div>
           </div>
         </div>
       </div>
@@ -292,6 +317,18 @@ body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-i
   <div class="setrow"><label>단백질 목표 (g)</label><div class="two"><input id="setProtMin" type="number" inputmode="numeric"><input id="setProtMax" type="number" inputmode="numeric"></div></div>
   <button class="btn" onclick="saveSet()">저장</button>
   <div class="note">183cm · 목표 75kg · 천천히 감량 기준 추천: 칼로리 1700–2200, 단백질 100–150g.</div>
+</div>
+
+<!-- Reco sheet -->
+<div class="sheet" id="recoSheet">
+  <div class="grip"></div>
+  <h3 id="recoTitle">얼마나 남았나</h3>
+  <div class="hint" id="recoTime">—</div>
+  <div class="reco-gap">
+    <div class="gp"><div class="gl">칼로리 남음</div><div class="gv" id="recoKcalGap">0 <small>kcal</small></div></div>
+    <div class="gp"><div class="gl">단백질 남음</div><div class="gv" id="recoProtGap">0 <small>g</small></div></div>
+  </div>
+  <div id="recoBody"></div>
 </div>
 
 <script>
@@ -605,7 +642,117 @@ function saveSet(){const g=state.goals;
   save();render();closeSheets();}
 
 function openSheet(id){document.getElementById('scrim').classList.add('on');document.getElementById(id).classList.add('on');}
-function closeSheets(){document.getElementById('scrim').classList.remove('on');['addSheet','qtySheet','setSheet'].forEach(i=>document.getElementById(i).classList.remove('on'));}
+function closeSheets(){document.getElementById('scrim').classList.remove('on');['addSheet','qtySheet','setSheet','recoSheet'].forEach(i=>document.getElementById(i).classList.remove('on'));}
+
+/* ---------- recommendation ---------- */
+// 건강한 음식 풀 (나쁜 음식=피자/라면/과자/튀김/빵 제외). kcal/prot per serving.
+const RECO_POOL={
+  light:[ // 가볍게 채우기 (밤/적게 남음)
+    {name:"우유",base:"200ml",kcal:130,prot:6},
+    {name:"그릭요거트",base:"100g",kcal:60,prot:10},
+    {name:"바나나",base:"1개",kcal:90,prot:1},
+    {name:"삶은 계란",base:"2개",kcal:156,prot:12},
+    {name:"아몬드",base:"20알",kcal:140,prot:5},
+    {name:"두유",base:"190ml",kcal:100,prot:6},
+    {name:"방울토마토",base:"10개",kcal:30,prot:1},
+  ],
+  medium:[ // 중간 (한 끼 무겁지 않게)
+    {name:"공깃밥 (흰밥)",base:"1공기",kcal:310,prot:6},
+    {name:"고구마",base:"중 1개",kcal:130,prot:2},
+    {name:"바나나+우유",base:"1잔",kcal:220,prot:7},
+    {name:"두부",base:"1/2모",kcal:120,prot:12},
+    {name:"닭가슴살 100g",base:"100g",kcal:110,prot:23},
+    {name:"오트밀+우유",base:"1그릇",kcal:250,prot:10},
+    {name:"아보카도",base:"1/2개",kcal:160,prot:2},
+  ],
+  meal:[ // 제대로 한 끼 (낮·많이 남음)
+    {name:"비빔밥",base:"1그릇",kcal:550,prot:16},
+    {name:"현미밥+계란+김치",base:"1상",kcal:480,prot:18},
+    {name:"닭가슴살 덮밥",base:"1그릇",kcal:520,prot:35},
+    {name:"연어구이+밥",base:"1상",kcal:520,prot:30},
+    {name:"제육볶음+밥",base:"1상",kcal:700,prot:30},
+    {name:"불고기+밥",base:"1상",kcal:680,prot:32},
+  ],
+  breakfast:[{name:"시리얼+무가당두유",base:"한 그릇",kcal:250,prot:9},{name:"계란후라이 2개+밥",base:"1상",kcal:410,prot:18},{name:"오트밀+바나나",base:"1그릇",kcal:300,prot:8}],
+  lunch:[{name:"비빔밥",base:"1그릇",kcal:550,prot:16},{name:"닭가슴살 덮밥",base:"1그릇",kcal:520,prot:35},{name:"김밥+계란",base:"1줄",kcal:560,prot:18}],
+  dinner:[{name:"현미밥+생선구이",base:"1상",kcal:500,prot:28},{name:"두부김치+밥",base:"1상",kcal:480,prot:22},{name:"닭볶음탕+밥",base:"1상",kcal:710,prot:34}],
+};
+
+function openReco(){
+  const g=state.goals, s=daySum(cursor);
+  const kGap=Math.max(0,g.kcalMin-s.k);
+  const pGap=Math.max(0,g.protMin-s.p);
+  const h=new Date().getHours();
+  const viewingToday=isToday(cursor);
+
+  document.getElementById('recoKcalGap').innerHTML=kGap+' <small>kcal</small>';
+  document.getElementById('recoProtGap').innerHTML=pGap+' <small>g</small>';
+  const body=document.getElementById('recoBody');
+  body.innerHTML='';
+
+  // 이미 다 채움
+  if(kGap<=0&&pGap<=0){
+    document.getElementById('recoTitle').textContent='다 채웠어';
+    document.getElementById('recoTime').textContent='';
+    body.innerHTML='<div class="reco-sleep"><div class="em">✅</div><div class="msg">칼로리·단백질 목표 다 채웠어.</div><div class="sub">잘했어. 더 안 먹어도 돼.</div></div>';
+    openSheet('recoSheet');return;
+  }
+
+  // 과거 날짜 보는 중이면 시간대 로직 대신 단순 목록
+  const hourForLogic = viewingToday ? h : 12;
+  document.getElementById('recoTime').textContent=viewingToday?('지금 '+h+'시 기준'):'지난 날 · 참고용';
+
+  // 너무 늦은 밤 → 포기 권유
+  if(viewingToday && (hourForLogic>=23 || hourForLogic<5)){
+    document.getElementById('recoTitle').textContent='오늘은 여기까지';
+    body.innerHTML='<div class="reco-sleep"><div class="em">🌙</div><div class="msg">너무 늦었어. 지금 더 먹기보단 그냥 자는 게 나아.</div><div class="sub">칼로리 '+kGap+'kcal 부족하지만, 이 시간 야식이 더 안 좋아. 내일 아침부터 채우자.</div></div>';
+    openSheet('recoSheet');return;
+  }
+
+  // 오전(하루 시작 전, ~10시): 하루 식단 통째 제안
+  if(viewingToday && hourForLogic<11){
+    document.getElementById('recoTitle').textContent='오늘 이렇게 채워봐';
+    body.innerHTML='';
+    [['🌅 아침',RECO_POOL.breakfast],['☀️ 점심',RECO_POOL.lunch],['🌙 저녁',RECO_POOL.dinner]].forEach(([lbl,pool])=>{
+      const pick=pool[Math.floor(Math.random()*pool.length)];
+      const plan=document.createElement('div');plan.className='reco-plan';
+      plan.innerHTML='<div class="pl">'+lbl+'</div>';
+      plan.appendChild(recoItemEl(pick,mealFromLabel(lbl)));
+      body.appendChild(plan);
+    });
+    openSheet('recoSheet');return;
+  }
+
+  // 그 외(낮~저녁): 남은 칼로리 크기에 따라 pool 선택
+  let pool, lead;
+  if(kGap>=450){pool=RECO_POOL.meal;lead='아직 꽤 남았어. 제대로 한 끼로 채우는 게 좋아.';}
+  else if(kGap>=200){pool=RECO_POOL.medium;lead='조금 남았어. 무겁지 않게 이 정도로 채워봐.';}
+  else{pool=RECO_POOL.light;lead='거의 다 왔어. 가볍게 이거면 충분해.';}
+
+  document.getElementById('recoTitle').textContent='이걸로 채워봐';
+  const leadEl=document.createElement('div');leadEl.className='reco-lead';leadEl.textContent=lead;body.appendChild(leadEl);
+
+  // 남은 칼로리에 가까운 순으로 정렬, 상위 5개
+  const sorted=[...pool].sort((a,b)=>Math.abs(a.kcal-kGap)-Math.abs(b.kcal-kGap)).slice(0,5);
+  const list=document.createElement('div');list.className='reco-list';
+  const targetMeal=hourForLogic<15?'점심':(hourForLogic<21?'저녁':'간식');
+  sorted.forEach(x=>list.appendChild(recoItemEl(x,targetMeal)));
+  body.appendChild(list);
+  openSheet('recoSheet');
+}
+function mealFromLabel(l){if(l.includes('아침'))return '아침';if(l.includes('점심'))return '점심';return '저녁';}
+function recoItemEl(x,meal){
+  const el=document.createElement('div');el.className='reco-item';
+  el.innerHTML='<div class="rn"><b>'+esc(x.name)+'</b><small>'+esc(x.base)+' · '+meal+'</small></div>'+
+    '<div class="rk">'+x.kcal+' kcal<em>단백질 '+x.prot+'g</em></div>'+
+    '<button class="radd">담기</button>';
+  el.querySelector('.radd').onclick=()=>{
+    const o=dayObj(cursor);if(!o[meal])o[meal]=[];o[meal].push({name:x.name,kcal:x.kcal,prot:x.prot});
+    bumpRecent({name:x.name,base:x.base,kcal:x.kcal,prot:x.prot});
+    closeSheets();setView('day');
+  };
+  return el;
+}
 
 setView('day');
 </script>
